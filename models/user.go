@@ -32,6 +32,11 @@ type SignUpArgs struct {
 	PhoneNumber string `json:"phone_number" binding:"required"`
 }
 
+type LoginArgs struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
 func CheckIfUserExists(db *gorm.DB, email string) bool {
 	var count int
 	err := db.Table("users").Where("email = ?", email).Count(&count).Error
@@ -80,4 +85,21 @@ func UserSignup(db *gorm.DB, args *SignUpArgs) error {
 	}
 
 	return nil
+}
+
+// GetUserFromEmail returns user details from the given email id
+func GetUserFromEmail(db *gorm.DB, email string) (*User, error) {
+	var user User
+
+	err := db.Find(&user, "email = ?", email).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":  "GetUserFromEmail",
+			"info":  "retrieving user info from email",
+			"email": email,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &user, nil
 }
