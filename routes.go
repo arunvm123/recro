@@ -10,5 +10,9 @@ func initialiseRoutes(server *server) *gin.Engine {
 	r.POST("/signup", server.signup)
 	r.POST("/login", server.login)
 
+	r.GET("/", server.indexHandler)
+	r.GET("/auth/:provider", server.oauthRedirect)
+	r.GET("/callback/:provider", server.oauthCallback)
+
 	return r
 }

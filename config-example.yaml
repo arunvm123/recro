@@ -7,3 +7,12 @@ database:
   database_name: "<DATABASE_NAME>"
   port: "<PORT>"
 jwt_secret: "<JWT_SECRET>"
+providers:
+  provider:
+    	clientID:     "<clientID>",
+			clientSecret: "<clientSecret>",
+			redirectURL:  "<redirectURL>",
+scopes:
+  provider:
+    - scope1
+    - scope2

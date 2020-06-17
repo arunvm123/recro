@@ -7,10 +7,12 @@ import (
 var configuration config
 
 type config struct {
-	Port      string         `yaml:"port"`
-	DomainURL string         `yaml:"domain_url"`
-	Database  databaseConfig `yaml:"database"`
-	JWTSecret string         `yaml:"jwt_secret"`
+	Port      string                       `yaml:"port"`
+	DomainURL string                       `yaml:"domain_url"`
+	Database  databaseConfig               `yaml:"database"`
+	JWTSecret string                       `yaml:"jwt_secret"`
+	Providers map[string]map[string]string `yaml:"providers"`
+	Scopes    map[string][]string          `yaml:"scopes"`
 }
 
 type databaseConfig struct {
@@ -32,6 +34,6 @@ func Initialise(filepath string) (*config, error) {
 
 // GetConfig looks for config.yaml in the current directory and reads
 // into the config struct
-func GetConfig() (*config, error) {
-	return &configuration, nil
+func GetConfig() *config {
+	return &configuration
 }

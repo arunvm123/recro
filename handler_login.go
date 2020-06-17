@@ -85,15 +85,7 @@ func getJWTToken(userID int) (string, error) {
 		"exp": time.Now().Add(time.Hour * 24).Unix(),
 	})
 
-	config, err := config.GetConfig()
-	if err != nil {
-		log.WithFields(log.Fields{
-			"func":    "getJWTToken",
-			"subFunc": "config.GetConfig",
-			"userID":  userID,
-		}).Error(err)
-		return "", err
-	}
+	config := config.GetConfig()
 
 	signedToken, err := token.SignedString([]byte(config.JWTSecret))
 	if err != nil {

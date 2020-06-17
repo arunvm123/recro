@@ -12,11 +12,13 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	log "github.com/sirupsen/logrus"
+	"gopkg.in/danilopolani/gocialite.v1"
 )
 
 type server struct {
 	db     *gorm.DB
 	routes *gin.Engine
+	gocial *gocialite.Dispatcher
 }
 
 func newServer() *server {
@@ -48,6 +50,9 @@ func main() {
 
 	// server.db.LogMode(true)
 	models.MigrateDB(server.db)
+
+	// For social logins
+	server.gocial = gocialite.NewDispatcher()
 
 	// Setting up routes
 	server.routes = initialiseRoutes(server)
