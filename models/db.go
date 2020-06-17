@@ -5,5 +5,5 @@ import (
 )
 
 func MigrateDB(db *gorm.DB) {
-	// db.AutoMigrate(&EmailValidateToken{})
+	db.AutoMigrate(&User{})
 }
