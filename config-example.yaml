@@ -1,0 +1,9 @@
+port: "<PORT>"
+domain_url: "<DOMAIN_URL>"
+database:
+  host: "<HOST>"
+  user: "<USER>"
+  password: "<PASSWORD"
+  database_name: "<DATABASE_NAME>"
+  port: "<PORT>"
+jwt_secret: "<JWT_SECRET>"
