@@ -51,6 +51,11 @@ type ProviderData struct {
 	LinkedIn interface{} `json:"linkedIn"`
 }
 
+type SetPasswordArgs struct {
+	CurrentPassword string `json:"current_password"`
+	NewPassword     string `json:"new_password" binding:"required"`
+}
+
 type UserInfo struct {
 	ID          int             `json:"id"`
 	Name        string          `json:"name"`
@@ -214,6 +219,22 @@ func UpdateProviderDetails(db *gorm.DB, email, provider string, providerData int
 	return user, nil
 }
 
+func GetUserDetails(db *gorm.DB, id int) (*UserInfo, error) {
+	var user UserInfo
+
+	err := db.Table("users").Find(&user, "id = ?", id).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func": "GetUserDetails",
+			"info": "retrieving details of user",
+			"id":   id,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func GetAllUsers(db *gorm.DB) (*[]UserInfo, error) {
 	var users []UserInfo
 
@@ -227,4 +248,59 @@ func GetAllUsers(db *gorm.DB) (*[]UserInfo, error) {
 	}
 
 	return &users, nil
+}
+
+// GetUserFromID returns user details from the given user id
+func GetUserFromID(db *gorm.DB, userID int) (*User, error) {
+	var user User
+
+	err := db.Find(&user, "id = ?", userID).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":   "GetUserFromID",
+			"info":   "retrieving user info from id",
+			"userID": userID,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func SetPassword(db *gorm.DB, user *User, args *SetPasswordArgs) error {
+
+	if len(user.Password) != 0 {
+		err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(args.CurrentPassword))
+		if err != nil {
+			log.WithFields(log.Fields{
+				"func":    "SetPassword",
+				"subFunc": "bcrypt.CompareHashAndPassword",
+				"userID":  user.ID,
+			}).Error(err)
+			return err
+		}
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(args.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "SetPassword",
+			"subFunc": "bcrypt.GenerateFromPassword",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
+	user.Password = string(hashedPassword)
+	err = user.Save(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "SetPassword",
+			"subFunc": "user.Save",
+			"userID":  user.ID,
+		}).Error(err)
+		return err
+	}
+
+	return nil
 }

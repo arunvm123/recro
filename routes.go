@@ -15,6 +15,11 @@ func initialiseRoutes(server *server) *gin.Engine {
 	r.GET("/callback/:provider", server.oauthCallback)
 
 	r.GET("/user/all", server.getAllUsers)
+	r.GET("/user", server.getUserDetails)
+
+	private := r.Group("/")
+	private.Use(server.tokenAuthorisationMiddleware())
+	private.PUT("/user/set_password", server.setPassword)
 
 	return r
 }
