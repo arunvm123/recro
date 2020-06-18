@@ -48,7 +48,7 @@ func main() {
 		panic(err)
 	}
 
-	// server.db.LogMode(true)
+	server.db.LogMode(true)
 	models.MigrateDB(server.db)
 
 	// For social logins

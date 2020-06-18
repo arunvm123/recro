@@ -1,6 +1,8 @@
 package models
 
 import (
+	"encoding/json"
+
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
 	"golang.org/x/crypto/bcrypt"
@@ -35,6 +37,18 @@ type SignUpArgs struct {
 type LoginArgs struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`
+}
+
+type OauthSignupArgs struct {
+	Name         string       `json:"name"`
+	Email        string       `json:"email"`
+	PhoneNumber  string       `json:"phone_number"`
+	ProviderData ProviderData `json:"provider_data"`
+}
+
+type ProviderData struct {
+	Github   interface{} `json:"github"`
+	LinkedIn interface{} `json:"linkedIn"`
 }
 
 func CheckIfUserExists(db *gorm.DB, email string) bool {
@@ -102,4 +116,92 @@ func GetUserFromEmail(db *gorm.DB, email string) (*User, error) {
 	}
 
 	return &user, nil
+}
+
+func UserOauthSignup(db *gorm.DB, args *OauthSignupArgs, provider string) (*User, error) {
+	user := User{
+		Email:       args.Email,
+		Name:        args.Name,
+		PhoneNumber: &args.PhoneNumber,
+	}
+
+	rawJson, err := json.Marshal(args.ProviderData)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":     "UserOauthSignup",
+			"subFunc":  "json.Marshal",
+			"email":    args.Email,
+			"provider": provider,
+		}).Error(err)
+		return nil, err
+	}
+
+	user.Meta = &postgres.Jsonb{
+		RawMessage: json.RawMessage(rawJson),
+	}
+
+	err = user.Create(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":     "UserOauthSignup",
+			"subFunc":  "user.Create",
+			"email":    args.Email,
+			"provider": provider,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func UpdateProviderDetails(db *gorm.DB, email, provider string, providerData interface{}) (*User, error) {
+	user, err := GetUserFromEmail(db, email)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UpdateProviderDetails",
+			"subFunc": "GetUserFromEmail",
+			"email":   email,
+		}).Error(err)
+		return nil, err
+	}
+
+	var data ProviderData
+	err = json.Unmarshal(user.Meta.RawMessage, &data)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UpdateProviderDetails",
+			"subFunc": "json.Unmarshal",
+			"email":   email,
+		}).Error(err)
+		return nil, err
+	}
+
+	switch provider {
+	case "github":
+		data.Github = providerData
+	}
+
+	dataBytes, err := json.Marshal(&data)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UpdateProviderDetails",
+			"subFunc": "json.Unmarshal",
+			"email":   email,
+		}).Error(err)
+		return nil, err
+	}
+
+	user.Meta.RawMessage = json.RawMessage(dataBytes)
+
+	err = user.Save(db)
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UpdateProviderDetails",
+			"subFunc": "user.Save",
+			"email":   email,
+		}).Error(err)
+		return nil, err
+	}
+
+	return user, nil
 }
