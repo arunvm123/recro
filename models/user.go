@@ -2,6 +2,7 @@ package models
 
 import (
 	"encoding/json"
+	"strconv"
 
 	"github.com/jinzhu/gorm"
 	"github.com/jinzhu/gorm/dialects/postgres"
@@ -56,6 +57,10 @@ type SetPasswordArgs struct {
 	NewPassword     string `json:"new_password" binding:"required"`
 }
 
+type UserSearchArgs struct {
+	SearchTerm int `json:"search_term" binding:"required"`
+}
+
 type UserInfo struct {
 	ID          int             `json:"id"`
 	Name        string          `json:"name"`
@@ -99,7 +104,7 @@ func UserSignup(db *gorm.DB, args *SignUpArgs) error {
 	user.Password = string(passwordHash)
 	user.Email = args.Email
 	user.Name = args.Name
-	user.PhoneNumber = &args.Password
+	user.PhoneNumber = &args.PhoneNumber
 
 	err = user.Create(db)
 	if err != nil {
@@ -303,4 +308,21 @@ func SetPassword(db *gorm.DB, user *User, args *SetPasswordArgs) error {
 	}
 
 	return nil
+}
+
+func UserSearch(db *gorm.DB, args *UserSearchArgs) (*[]UserInfo, error) {
+	var users []UserInfo
+
+	err := db.Table("users").Where("phone_number LIKE ?", strconv.Itoa(args.SearchTerm)+"%").
+		Find(&users).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func":    "UserSearch",
+			"subFunc": "searching for users with phone number starting with specified term",
+			"args":    *args,
+		}).Error(err)
+		return nil, err
+	}
+
+	return &users, nil
 }

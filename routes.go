@@ -20,6 +20,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	private := r.Group("/")
 	private.Use(server.tokenAuthorisationMiddleware())
 	private.PUT("/user/set_password", server.setPassword)
+	private.POST("/user/search", server.userSearch)
 
 	return r
 }
