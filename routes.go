@@ -14,5 +14,7 @@ func initialiseRoutes(server *server) *gin.Engine {
 	r.GET("/auth/:provider", server.oauthRedirect)
 	r.GET("/callback/:provider", server.oauthCallback)
 
+	r.GET("/user/all", server.getAllUsers)
+
 	return r
 }

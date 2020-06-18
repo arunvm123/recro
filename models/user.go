@@ -51,6 +51,14 @@ type ProviderData struct {
 	LinkedIn interface{} `json:"linkedIn"`
 }
 
+type UserInfo struct {
+	ID          int             `json:"id"`
+	Name        string          `json:"name"`
+	Email       string          `json:"email"`
+	PhoneNumber *string         `json:"phone_number"`
+	Meta        *postgres.Jsonb `json:"meta"`
+}
+
 func CheckIfUserExists(db *gorm.DB, email string) bool {
 	var count int
 	err := db.Table("users").Where("email = ?", email).Count(&count).Error
@@ -204,4 +212,19 @@ func UpdateProviderDetails(db *gorm.DB, email, provider string, providerData int
 	}
 
 	return user, nil
+}
+
+func GetAllUsers(db *gorm.DB) (*[]UserInfo, error) {
+	var users []UserInfo
+
+	err := db.Table("users").Find(&users).Error
+	if err != nil {
+		log.WithFields(log.Fields{
+			"func": "GetAllUsers",
+			"info": "retrieving details of all users",
+		}).Error(err)
+		return nil, err
+	}
+
+	return &users, nil
 }
