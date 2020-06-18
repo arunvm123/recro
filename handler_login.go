@@ -38,6 +38,11 @@ func (server *server) login(c *gin.Context) {
 		return
 	}
 
+	if len(user.Password) == 0 {
+		c.JSON(http.StatusUnauthorized, "Please use social login")
+		return
+	}
+
 	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(args.Password))
 	if err != nil {
 		log.WithFields(log.Fields{
